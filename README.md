@@ -48,8 +48,9 @@ spoon.SpoonInstall:andUse("EnsureApp", {
 Now, when invoked via `EnsureApp:ensureApp()` (`ie EnsureApp:ensureApp("Discord")`), the plugin will look up the app configuration and perform the following steps:
 * Discord - Move global Discord window to the current space and maximize if needed.
 * Arc - Move or create a space local Arc window in the current space and maximize if needed.
-* Plexamp - Move a global Plexamp window to the current space under a certain frameA.
+* Plexamp - Move a global Plexamp window to the current space under a certain frame.
     * Mostly used for [MenuBarApps.spoon](https://github.com/adammillerio/MenuBarApps.spoon)
+    * Requires the `actionConfig` `moveMenuBar` to be set to a hs.menubar during ensure.
 
 Refer to Usage section for a link to the hosted documentation, which has more information on app configuration.
 

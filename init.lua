@@ -23,8 +23,8 @@ WindowCache = spoon.WindowCache
 --- EnsureApp.action.move
 --- Constant
 --- Move the window to appear under the provided frame as if it were a menu. This
---- requires the actionConfig `moveFrame` to be set to the destination frame during
---- calls to ensureApp().
+--- requires the actionConfig `moveMenuBar` to be set to the destination hs.menubar
+--- during calls to ensureApp().
 
 --- EnsureApp.action.maximize
 --- Constant
@@ -88,17 +88,19 @@ end
 -- Inputs are the app config, action specific config, the hs.application to action
 -- on, and the hs.window to action on.
 function EnsureApp:_actionWindow(config, actionConfig, app, appWindow)
-    -- move mode - This moves the application under the supplied moveFrame so that it
-    -- appears like a menu
+    -- move mode - This moves the application under the supplied moveMenuBar so that
+    -- it appears like a menu
     if config.action == actions.move then
         if actionConfig then
-            -- Get rect representing the frame of the item to move the window to
-            -- from the supplied actionConfig.
-            appMoveFrame = actionConfig.moveFrame
-            if not appMoveFrame then
-                self.logger.ef("No moveFrame provided for move action")
+            -- Get the hs.menubar to moe the window to from the supplied actionConfig.
+            appMoveMenuBar = actionConfig.moveMenuBar
+            if not appMoveMenuBar then
+                self.logger.ef("No moveMenuBar provided for move action")
                 return
             end
+
+            -- Get rect representing the hs.menubar frame.
+            appMenuBarFrame = appMoveMenuBar:frame()
         end
 
         -- Get rect representing the frame of the app window
@@ -107,8 +109,10 @@ function EnsureApp:_actionWindow(config, actionConfig, app, appWindow)
         -- move() only moves in absolute coordinates if a rect is provided, so we
         -- just update the appWindowFrame rect's x coordinate to be such that it is
         -- under the menubar item, aligned to the right.
-        appWindowFrame.x = appMoveFrame.y
-        appWindowFrame.y = appMoveFrame.h
+        appWindowFrame.x = appMenuBarFrame.x -
+                               (appWindowFrame.w - appMenuBarFrame.w)
+        -- Do a similar transformation for y
+        appWindowFrame.y = appMenuBarFrame.y + appMenuBarFrame.h
 
         -- Move the window to the desired location
         appWindow:move(appWindowFrame)
@@ -213,7 +217,7 @@ end
 --- Parameters:
 ---  * appName - Name of the application to ensure.
 ---  * actionConfig - Optional actionConfig table with action-specific information.
----    * moveFrame - hs.geometry.rect of the frame to move under with `action=move`.
+---    * moveMenuBar- hs.menubar to move under with `action=move`.
 ---
 --- Returns:
 ---  * None
@@ -232,7 +236,7 @@ end
 --- Parameters:
 ---  * appName - Name of the application to ensure.
 ---  * actionConfig - Optional actionConfig table with action-specific information.
----    * moveFrame - hs.geometry.rect of the frame to move under with `action=move`.
+---    * moveMenuBar- hs.menubar to move under with `action=move`.
 ---
 --- Returns:
 ---  * None
