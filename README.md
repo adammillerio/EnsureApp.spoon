@@ -95,4 +95,4 @@ hs.spoons.use("EnsureApp", {
 
 # Usage
 
-Refer to the [hosted documentation](https://adammiller.io/EnsureApp/EnsureApp.html) additional for information on usage.
+Refer to the [hosted documentation](https://adammiller.io/Spoons/EnsureApp.html) additional for information on usage.
