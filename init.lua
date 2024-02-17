@@ -48,6 +48,11 @@ for k in pairs(actions) do EnsureApp[k] = k end -- expose actions
 ---  * disableOpen - If true, this will disable auto-opening the app if not open.
 EnsureApp.apps = nil
 
+--- EnsureApp.appNamesSet
+--- Variable
+--- Table with "Set" of all app names configured for EnsureApp.
+EnsureApp.appNamesSet = nil
+
 --- EnsureApp.logger
 --- Variable
 --- Logger object used within the Spoon. Can be accessed to set the default log 
@@ -74,7 +79,7 @@ EnsureApp.windowOpenTimer = nil
 ---
 --- Returns:
 ---  * None
-function EnsureApp:init() end
+function EnsureApp:init() self.appNamesSet = {} end
 
 -- Utility method for having instance specific callbacks.
 -- Inputs are the callback fn and any arguments to be applied after the instance
@@ -382,10 +387,12 @@ function EnsureApp:getAppNames(spaceID)
     local orderedAppNames = {}
     local appNamesSet = {}
 
-    local recentAppNamesForSpace = self:getAppNamesForSpace(spaceID)
-    for _, appName in ipairs(recentAppNamesForSpace) do
-        table.insert(orderedAppNames, appName)
-        appNamesSet[appName] = true
+    if spaceID then
+        local recentAppNamesForSpace = self:getAppNamesForSpace(spaceID)
+        for _, appName in ipairs(recentAppNamesForSpace) do
+            table.insert(orderedAppNames, appName)
+            appNamesSet[appName] = true
+        end
     end
 
     for appName, _ in pairs(self.apps) do
@@ -420,6 +427,23 @@ function EnsureApp:getAppNamesForSpace(spaceID)
     return ensuredAppNamesForSpace
 end
 
+--- EnsureApp:getAppEnsured(app)
+--- Method
+--- Returns whether or not app name is configured for EnsureApp.
+---
+--- Parameters:
+---  * app - App name to check.
+---
+--- Returns:
+---  * A boolean representing whether or not the app is configured for EnsureApp.
+function EnsureApp:getAppEnsured(app)
+    if self.appNamesSet[app] then
+        return true
+    else
+        return false
+    end
+end
+
 --- EnsureApp:start()
 --- Method
 --- Spoon start method for EnsureApp.
@@ -436,6 +460,9 @@ function EnsureApp:start()
     if self.logLevel ~= nil then self.logger.setLogLevel(self.logLevel) end
 
     self.logger.v("Starting EnsureApp")
+
+    -- Initialize the app names "set".
+    for appName, _ in pairs(self.apps) do self.appNamesSet[appName] = true end
 end
 
 --- EnsureApp:stop()
