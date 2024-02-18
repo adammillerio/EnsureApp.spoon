@@ -30,7 +30,12 @@ WindowCache = spoon.WindowCache
 --- Constant
 --- Maximize the application on the current space if it is not maximized already.
 
-local actions = {move = "move", maximize = "maximize"}
+--- EnsureApp.action.none
+--- Constant
+--- No-op, will do no action other than moving window to the space and focusing
+--- it (if enabled).
+
+local actions = {move = "move", maximize = "maximize", none = "none"}
 
 for k in pairs(actions) do EnsureApp[k] = k end -- expose actions
 
@@ -47,6 +52,13 @@ for k in pairs(actions) do EnsureApp[k] = k end -- expose actions
 ---    * menuItem - Menu item in menu section to select
 ---  * disableOpen - If true, this will disable auto-opening the app if not open.
 EnsureApp.apps = nil
+
+--- EnsureApp.defaultAppConfig
+--- Variable
+--- Table containing the default configuration to be used for any app that is not
+--- configured in self.apps with app-specific config. By default, this will move
+--- the most recently accessed window in any space to the current one and focus it.
+EnsureApp.defaultAppConfig = {action = "none"}
 
 --- EnsureApp.appNamesSet
 --- Variable
@@ -137,8 +149,13 @@ function EnsureApp:_actionWindow(config, actionConfig, app, appWindow)
     elseif config.action == actions.maximize then
         if appWindow:isMaximizable() then appWindow:maximize() end
     else
-        self.logger.ef("Unknown action %s", action)
-        return
+        if config.action == actions.none then
+            self.logger.vf("None action, executing no actions for app: %s",
+                           config.app)
+        else
+            self.logger.ef("Unknown action %s", action)
+            return
+        end
     end
 
     if actionConfig then
@@ -268,12 +285,22 @@ end
 ---  * None
 ---
 --- Notes:
----  * Refer to EnsureApp.apps for information on how to configure apps.
+---  * The application name must be one recognized by macOS. hs.applications.find
+---    way to discover this.
+---  * The default action is to move the most recently accessed window in any space
+---    corresponding to this application to the current space and focus it.
+---     * This can be configured with defaultAppConfig.
+---  * Refer to EnsureApp.apps for information on how to add additional app-specific
+---    configurations like space precedence.
 function EnsureApp:ensureApp(appName, actionConfig)
     local config = self.apps[appName]
     if not config then
-        self.logger.ef("No EnsureApp configuration for %s", appName)
-        return
+        self.logger.ef(
+            "No EnsureApp configuration for %s, using default config (this is best-effort)",
+            appName)
+        config = hs.fnutils.copy(self.defaultAppConfig)
+        -- Set the app to whatever appName we got.
+        config.app = appName
     end
 
     -- Store the focused space from before we start the action flow. This helps
