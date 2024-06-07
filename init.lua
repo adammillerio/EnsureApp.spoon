@@ -11,7 +11,7 @@ EnsureApp.__index = EnsureApp
 
 -- Metadata
 EnsureApp.name = "EnsureApp"
-EnsureApp.version = "0.0.3"
+EnsureApp.version = "0.0.4"
 EnsureApp.author = "Adam Miller <adam@adammiller.io>"
 EnsureApp.homepage = "https://github.com/adammillerio/EnsureApp.spoon"
 EnsureApp.license = "MIT - https://opensource.org/licenses/MIT"
