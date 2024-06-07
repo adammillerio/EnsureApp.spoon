@@ -3,7 +3,7 @@
 --- Utility for providing fast and guaranteed access to app windows during macros.
 ---
 --- Download: https://github.com/adammillerio/Spoons/raw/main/Spoons/EnsureApp.spoon.zip
---- 
+---
 --- README with Example Usage: [README.md](https://github.com/adammillerio/EnsureApp.spoon/blob/main/README.md)
 local EnsureApp = {}
 
@@ -11,7 +11,7 @@ EnsureApp.__index = EnsureApp
 
 -- Metadata
 EnsureApp.name = "EnsureApp"
-EnsureApp.version = "0.0.3"
+EnsureApp.version = "0.0.4"
 EnsureApp.author = "Adam Miller <adam@adammiller.io>"
 EnsureApp.homepage = "https://github.com/adammillerio/EnsureApp.spoon"
 EnsureApp.license = "MIT - https://opensource.org/licenses/MIT"
@@ -67,7 +67,7 @@ EnsureApp.appNamesSet = nil
 
 --- EnsureApp.logger
 --- Variable
---- Logger object used within the Spoon. Can be accessed to set the default log 
+--- Logger object used within the Spoon. Can be accessed to set the default log
 --- level for the messages coming from the Spoon.
 EnsureApp.logger = nil
 
@@ -100,7 +100,7 @@ function EnsureApp:_instanceCallback(callback, ...)
     return hs.fnutils.partial(callback, self, ...)
 end
 
--- Action a window. This performs whatever action is needed on an app's window 
+-- Action a window. This performs whatever action is needed on an app's window
 -- after being migrated to the current space.
 -- Inputs are the app config, action specific config, the hs.application to action
 -- on, and the hs.window to action on.
@@ -209,9 +209,9 @@ function EnsureApp:_moveOpenedAppWindow(config, actionConfig,
 end
 
 -- Open a new window for the running app in the current Space.
--- For applications which have space precedence enabled, this will look at the 
+-- For applications which have space precedence enabled, this will look at the
 -- newWindowConfig for the given app to determine the menu item to select which
--- will open a new window in the current Space. It will then wait for a window 
+-- will open a new window in the current Space. It will then wait for a window
 -- from this app to appear in the Space and then action on it.
 -- Inputs are the app config, action specific config, currently focused space ID,
 -- and the hs.application to action on.
@@ -285,7 +285,7 @@ end
 ---  * None
 ---
 --- Notes:
----  * The application name must be one recognized by macOS. hs.applications.find
+---  * The application name must be one recognized by macOS. hs.applications.find is
 ---    way to discover this.
 ---  * The default action is to move the most recently accessed window in any space
 ---    corresponding to this application to the current space and focus it.
@@ -388,9 +388,15 @@ function EnsureApp:ensureApp(appName, actionConfig)
         -- need to act on it, and move the window to the currently focused space.
         self:_moveOpenedAppWindow(config, actionConfig, currentlyFocusedSpace,
                                   app, appWindow)
-    else
-        -- Otherwise just hide the app if it existed and was at the front.
-        app:hide()
+    elseif hs.window.frontmostWindow():id() == appWindow:id() then
+        -- If the app is running and a window is already the frontmost window.
+        if actionConfig and actionConfig.toggle then
+            -- If toggle is enabled in the action config, hide the app.
+            app:hide()
+        else
+            -- If not, then nothing needs to be done.
+            self.logger.df("App %s is already open and at the front", appName)
+        end
     end
 end
 
