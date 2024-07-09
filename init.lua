@@ -20,6 +20,8 @@ EnsureApp.license = "MIT - https://opensource.org/licenses/MIT"
 -- WindowCache is used for quick retrieval of windows when showing/hiding.
 WindowCache = spoon.WindowCache
 
+EnsureApp.spaces = nil
+
 --- EnsureApp.action.move
 --- Constant
 --- Move the window to appear under the provided frame as if it were a menu. This
@@ -185,7 +187,7 @@ function EnsureApp:_getAndMoveOpenedAppWindow(config, actionConfig,
         spaceID = nil
     end
 
-    appWindow = WindowCache:findWindowByApp(config.app, spaceID)
+    appWindow = WindowCache:findWindowByApp(config.app, spaceID) -- This needs to be swapped to some sort of logical space ID in a way that is transparent here ideally.
     if not appWindow then
         self.logger.ef("No window for app %s open, cannot continue", config.app)
         return
@@ -203,7 +205,8 @@ end
 function EnsureApp:_moveOpenedAppWindow(config, actionConfig,
                                         currentlyFocusedSpace, app, appWindow)
     -- Move the window to the currently focused space.
-    hs.spaces.moveWindowToSpace(appWindow, currentlyFocusedSpace)
+    -- Also needs to be implemented in SpaceMan
+    self.spaces.moveWindowToSpace(appWindow, currentlyFocusedSpace)
 
     self:_actionWindow(config, actionConfig, app, appWindow)
 end
@@ -306,11 +309,13 @@ function EnsureApp:ensureApp(appName, actionConfig)
     -- Store the focused space from before we start the action flow. This helps
     -- when apps try to force themselves to open in another space which will change
     -- the focused space during app open.
-    currentlyFocusedSpace = hs.spaces.focusedSpace()
+    currentlyFocusedSpace = self.spaces.focusedSpace() -- A function needs to be added to WindowCache for this that does this under "native" behavior.
 
     -- Fullscreen/tiled spaces cannot support ensuring apps and will actually
     -- just cause an endless loop of more apps trying to go fullscreen.
-    if hs.spaces.spaceType(currentlyFocusedSpace) == "fullscreen" then
+    -- idk how fullscreen is gonna work, I guess this is a check that can be done
+    -- at the start regardless of if we are in native or virtual mode.
+    if self.spaces.spaceType(currentlyFocusedSpace) == "fullscreen" then
         self.logger.v("In fullscreen space, skipping ensure action")
         return
     end
@@ -493,6 +498,9 @@ function EnsureApp:start()
     if self.logLevel ~= nil then self.logger.setLogLevel(self.logLevel) end
 
     self.logger.v("Starting EnsureApp")
+
+    -- Use the Space "Engine" WindowCache is using (native or virtual).
+    self.spaces = WindowCache.spaces
 
     -- Initialize the app names "set".
     for appName, _ in pairs(self.apps) do self.appNamesSet[appName] = true end
